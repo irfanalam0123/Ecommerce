@@ -1,7 +1,10 @@
 package com.ecommerce.project.security.jwt;
+import com.ecommerce.project.userSecurityService.UserDetailsImp;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseCookie;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -13,6 +16,7 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.util.WebUtils;
 
 @Component
 public class JWUtils {
@@ -25,24 +29,26 @@ public class JWUtils {
             "YS1zdHJpbmctc2VjcmV0LWF0LWxlYXN0LTI1Ni1iaXRzLWxvbmc=";
 
 
+    private String jwtCooke="springbootEcom";
+
     private  static final Logger logger= LoggerFactory.getLogger(JWUtils.class);
-    public String getJwtFromheader(HttpServletRequest request){
 
-        String bearerToken=request.getHeader("Authorization");
+//    public String getJwtFromheader(HttpServletRequest request){
+//
+//        String bearerToken=request.getHeader("Authorization");
+//
+//        logger.debug("Autherization Header :{}",bearerToken);
+//
+//        if(bearerToken !=null && bearerToken.startsWith("Bearer")){
+//            return bearerToken.substring(7);
+//        }else{
+//            return null;
+//        }
+//    }
 
-        logger.debug("Autherization Header :{}",bearerToken);
 
-        if(bearerToken !=null && bearerToken.startsWith("Bearer")){
-            return bearerToken.substring(7);
-        }else{
-            return null;
-        }
-    }
+    public String generateFromUserName(String userName){
 
-
-    public String generateFromUserName(UserDetails userDetails){
-
-        String  userName=userDetails.getUsername();
         return Jwts.builder()
                 .subject(userName)
                 .issuedAt(new Date())
@@ -59,6 +65,40 @@ public class JWUtils {
                 .getPayload().getSubject();
     }
 
+
+    String getJwtFromCooke(HttpServletRequest request){
+        Cookie cookie= WebUtils.getCookie(request,jwtCooke);
+
+        if(cookie != null){
+            return cookie.getValue();
+        }else {
+            return  null;
+        }
+    }
+
+
+    public ResponseCookie generateCookieFromjwt(UserDetailsImp principle){
+        String jwtcookei=generateFromUserName(principle.getUsername());
+
+        ResponseCookie cookie= ResponseCookie.from(jwtCooke,jwtcookei)
+                .path("/api")
+                .maxAge(24*60*60)
+                .httpOnly(false)
+                .build();
+
+        return cookie;
+
+
+    }
+
+
+    public ResponseCookie cleanCookie(){
+        ResponseCookie cookie= ResponseCookie.from(jwtCooke,null)
+                .path("/api")
+                .build();
+        return cookie;
+
+    }
 
 //    private Key key(){
 //        //return Keys.hmacShaKeyFor(Decoders.BASE64.decode(jwtSecret));

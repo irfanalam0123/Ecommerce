@@ -82,17 +82,17 @@ public class ProductImp implements ProductService {
         Sort sort=sortOrder.equalsIgnoreCase("asc")?Sort.by(sortBy).ascending()
                 :Sort.by(sortBy).descending();
         Pageable pageDetails= PageRequest.of(pageNumber,pageSize,sort);
+
         Page<Product>pageall=productRepository.findAll(pageDetails);
-
-
         List<Product>products =pageall.getContent();
 
         List<ProductDTO>productDTOS=products.stream()
                 .map((product)->modelMapper.map(product, ProductDTO.class)).toList();
 
-        if(products.isEmpty()){
-            throw new APIException("not any product exit!!");
-        }
+//        if(products.isEmpty()){
+//            return products;
+//           // throw new APIException("not any product exit!!");
+//        }
 
         ProductResponse productResponse=new ProductResponse();
         productResponse.setContent(productDTOS);
